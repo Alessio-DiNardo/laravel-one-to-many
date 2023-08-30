@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Models\Type;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -24,7 +25,7 @@ class PostController extends Controller
      */
     public function create()
     {
-        return view('admin.posts.create');
+        return view('admin.posts.create', compact('types'));
     }
 
     /**
@@ -38,19 +39,20 @@ class PostController extends Controller
             'title' => ['required', 'unique:posts','min:3', 'max:255'],
             'image' => ['image'],
             'content' => ['required', 'min:10'],
-        ]);
+        ]
+    
+    );
+        $data["slug"] = Str::of($data['title'])->slug('-');
 
         if ($request->hasFile('image')){
             $img_path = Storage::put('uploads/posts', $request['image']);
             $data['image'] = $img_path;
         }
 
-        $data["slug"] = Str::of($data['title'])->slug('-');
         $newPost = Post::create($data);
 
-        $newPost->slug = Str::of("$newPost->id " . $data['title'])->slug('-');
-        $newPost->save();
-
+        $newPost = new Post;
+        $newPost = Post::create($data);
         return redirect()->route('admin.posts.show', $newPost);
     }
 
@@ -69,33 +71,34 @@ class PostController extends Controller
     public function edit(Post $post)
     {
         $types = Type::all();
-        return view('admin.post.create', compact('types'));
+        return view('admin.post.create', compact('post','types'));
     }
 
     /**
      * Update the specified resource in storage.
      */
         public function update(Request $request, Post $post)
-    {
-        $data = $request->validate([
-            'title' => ['required', 'min:3', 'max:255', Rule::unique('posts')->ignore($post->id)],
-            'image' => ['image', 'max:512'],
-            'content' => ['required', 'min:10'],
-        ]);
-        if ($request->hasFile('image')){
-            Storage::delete($post->image);
-            $img_path = Storage::put('uploads/posts', $request['image']);
-            $data['image'] = $img_path;
-        }
-
-        $data['slug'] = Str::of("$post->id " . $data['title'])->slug('-');
-
-        $post->update($data);
-
-        return redirect()->route('admin.posts.show', compact('post'));
-    }
+        {
+            //
+            // dd($request->all());
+            $data = $request->validate(
+                [
+                    'title' => ['required', 'max:255', Rule::unique('posts')->ignore($post->id)],
+                    'author' => ['required', 'max:255'],
+                    'content' => ['required', ''],
+                    'image' => ['image', 'max:512'],
+                    'type_id' => ['required', 'exists:types,id']
+                ]
     
-
+            );
+            $img_path = \Storage::put('uploads/posts', $request['image']);
+            $data['image'] = $img_path;
+            $data['slug'] = Str::of($data['title'])->slug('-');
+            $post->update($data);
+    
+            return redirect()->route('admin.posts.show', compact('post'));
+            //
+        }
     /**
      * Remove the specified resource from storage.
      */
@@ -104,8 +107,32 @@ class PostController extends Controller
     
         public function destroy(Post $post)
     {
+        //
         $post->delete();
         return redirect()->route('admin.posts.index');
+        // dd($post);
     }
+
+    public function deletedIndex(Post $post)
+    {
+        $posts = Post::onlyTrashed()->paginate(10);
+        return view('admin.post.deleted', compact('posts'));
+    }
+
+    public function restore(string $id)
+    {
+        $post = Post::withTrashed()->findOrFail($id);
+        $post->restore();
+        return redirect()->route('admin.posts.show', $id);
+    }
+
+    public function obliterate(string $id)
+    {
+        $post = Post::onlyTrashed()->findOrFail($id);
+        \Storage::delete($post->image);
+        $post->forceDelete();
+        return redirect()->route('admin.posts.index');
+    }
+}
 
 }
