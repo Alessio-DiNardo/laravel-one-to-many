@@ -81,16 +81,17 @@ class PostController extends Controller
         {
             //
             // dd($request->all());
+
             $data = $request->validate(
+                
                 [
                     'title' => ['required', 'max:255', Rule::unique('posts')->ignore($post->id)],
-                    'author' => ['required', 'max:255'],
                     'content' => ['required', ''],
                     'image' => ['image', 'max:512'],
-                    'type_id' => ['required', 'exists:types,id']
                 ]
-    
+                    
             );
+            
             $img_path = Storage::put('uploads/posts', $request['image']);
             $data['image'] = $img_path;
             $data['slug'] = Str::of($data['title'])->slug('-');
@@ -116,14 +117,14 @@ class PostController extends Controller
     public function deletedIndex(Post $post)
     {
         $posts = Post::onlyTrashed()->paginate(10);
-        return view('admin.post.deleted', compact('posts'));
+        return view('admin.posts.deleted', compact('posts'));
     }
 
     public function restore(string $id)
     {
-        $post = Post::withTrashed()->findOrFail($id);
+        $post = Post::onlyTrashed()->findOrFail($id);
         $post->restore();
-        return redirect()->route('admin.posts.show', $id);
+        return redirect()->route('admin.posts.index', $id);
     }
 
     public function obliterate(string $id)

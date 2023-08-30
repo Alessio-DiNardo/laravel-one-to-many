@@ -20,10 +20,10 @@ use App\Http\Controllers\guest\HomeController as GuestHomeController;
 
 Route:: prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/', [ AdminDashboardController::class , 'home'])->name('home');
-    Route::resource('/posts', AdminPostController::class);
     Route::get('/posts/deleted', [AdminPostController::class, 'deletedIndex'] )->name('posts.deleted');
     Route::post('/posts/deleted/{post}', [AdminPostController::class, 'restore'] )->name('posts.restore');
     Route::delete('/posts/deleted/{post}', [AdminPostController::class, 'obliterate'] )->name('posts.obliterate');
+    Route::resource('/posts', AdminPostController::class);
 
 
 });
