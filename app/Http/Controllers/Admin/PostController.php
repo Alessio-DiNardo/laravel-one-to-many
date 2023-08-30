@@ -51,7 +51,7 @@ class PostController extends Controller
             $data['image'] = $img_path;
         }
 
-        // $newPost = new Post;
+        
         $newPost = Post::create($data);
         return redirect()->route('admin.posts.show', $newPost);
     }
