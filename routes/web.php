@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\guest\HomeController as GuestHomeController;
 
@@ -17,19 +17,18 @@ use App\Http\Controllers\guest\HomeController as GuestHomeController;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
 
 Route:: prefix('admin')->name('admin.')->middleware('auth')->group(function () {
-    Route::get('/home', [ AdminDashboardController::class , 'home'])->name('home');
+    Route::get('/', [ AdminDashboardController::class , 'home'])->name('home');
+    Route::resource('/posts', AdminPostController::class);
+    Route::get('/posts/deleted', [AdminPostController::class, 'deletedIndex'] )->name('posts.deleted');
+    Route::post('/posts/deleted/{post}', [AdminPostController::class, 'restore'] )->name('posts.restore');
+    Route::delete('/posts/deleted/{post}', [AdminPostController::class, 'obliterate'] )->name('posts.obliterate');
+
+
 });
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-Route::get('/posts/deleted', [AdminPostController::class, 'deletedIndex'] )->name('posts.deleted');
-Route::post('/posts/deleted/{post}', [AdminPostController::class, 'restore'] )->name('posts.restore');
-Route::delete('/posts/deleted/{post}', [AdminPostController::class, 'obliterate'] )->name('posts.obliterate');
-Route::resource('/posts', AdminPostController::class);
+Route::get('/', [GuestHomeController::class, 'home'])->name('guest.home');
+

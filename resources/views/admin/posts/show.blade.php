@@ -21,7 +21,7 @@
                     <p class="card-text">
                         <strong>{{$post->type ? $post->type->name : ''}}</strong>
                     </p>
-                    <a href="" class="btn btn-sm btn-success">
+                    <a href="{{ route('admin.posts.edit', $post)}}" class="btn btn-sm btn-success">
                         Edit
                     </a>
                     <form class="d-inline-block" action="{{ route('admin.posts.destroy', $post ) }}" method="POST">
