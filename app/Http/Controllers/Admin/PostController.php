@@ -35,7 +35,7 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
 
         $data = $request->validate([
             'title' => ['required', 'unique:posts','min:3', 'max:255'],
@@ -47,13 +47,11 @@ class PostController extends Controller
         $data["slug"] = Str::of($data['title'])->slug('-');
 
         if ($request->hasFile('image')){
-            $img_path = Storage::put('uploads/posts', $request['image']);
+            $img_path = Storage::put('uploads/posts', $request->file('image'));
             $data['image'] = $img_path;
         }
 
-        $newPost = Post::create($data);
-
-        $newPost = new Post;
+        // $newPost = new Post;
         $newPost = Post::create($data);
         return redirect()->route('admin.posts.show', $newPost);
     }
